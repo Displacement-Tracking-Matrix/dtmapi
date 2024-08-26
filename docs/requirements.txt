@@ -1,0 +1,5 @@
+requests
+pandas
+sphinx
+sphinx-rtd-theme
+ipykernel
