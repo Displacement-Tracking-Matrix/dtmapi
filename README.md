@@ -1,4 +1,14 @@
+<picture align="center">
+  <source media="(prefers-color-scheme: dark)" srcset="https://dtm.iom.int/themes/custom/dtm_global/logo.svg">
+  <img alt="DTM Logo" src="https://dtm.iom.int/themes/custom/dtm_global/logo.svg">
+</picture>
+
+-----------------
+
 # dtmapi
+![PyPI](https://img.shields.io/pypi/v/dtmapi)
+![Documentation Status](https://readthedocs.org/projects/dtmapi/badge/?version=latest)
+![License](https://img.shields.io/github/license/Displacement-tracking-Matrix/dtmapi)
 
 ## About
 `dtmapi` is a Python package developed by Displacement Tracking Matrix (DTM). This package allows the humanitarian community, academia, media, government, and non-governmental organizations to utilize the data collected by DTM. It provides non-sensitive Internally Displaced Person (IDP) figures, aggregated at the country, Admin 1 (states, provinces, or equivalent), and Admin 2 (smaller subnational administrative areas) levels.
