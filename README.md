@@ -1,9 +1,6 @@
-<div style="text-align: center;">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://dtm.iom.int/themes/custom/dtm_global/logo.svg">
-    <img alt="DTM Logo" src="https://dtm.iom.int/themes/custom/dtm_global/logo.svg" style="width: 400px;">
-  </picture>
-</div>
+<p align="center">
+  <img alt="DTM Logo" src="https://dtm.iom.int/themes/custom/dtm_global/logo.svg" width="400">
+</p>
 
 -----------------
 
