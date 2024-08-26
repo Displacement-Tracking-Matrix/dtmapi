@@ -2,13 +2,20 @@
    sphinx-quickstart on Mon Aug 26 16:29:23 2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
+.. image:: https://dtm.iom.int/themes/custom/dtm_global/logo.svg
+   :alt: Displacement Tracking Matrix
+   :align: center
+   :width: 400px
+   :target: https://dtm.iom.int
+
+=====
 
 dtmapi Documentation
 ===================
 
 =====
 
-`dtmapi` is a Python package developed by Displacement Tracking Matrix (DTM). This package is designed to serve the humanitarian community, academia, media, government, and non-governmental organizations by providing access to data collected by DTM. Specifically, it offers non-sensitive Internally Displaced Person (IDP) figures, aggregated at various administrative levels including:
+`dtmapi` is a Python package developed by `Displacement Tracking Matrix (DTM) <https://dtm.iom.int/>`_. This package is designed to serve the humanitarian community, academia, media, government, and non-governmental organizations by providing access to data collected by DTM. Specifically, it offers non-sensitive Internally Displaced Person (IDP) figures, aggregated at various administrative levels including:
 
 - **Country Level (Admin 0)**
 - **State/Province Level (Admin 1)**
