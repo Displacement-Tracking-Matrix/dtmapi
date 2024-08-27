@@ -18,8 +18,8 @@ dtmapi Documentation
 `dtmapi` is a Python package developed by `Displacement Tracking Matrix (DTM) <https://dtm.iom.int/>`_. This package is designed to serve the humanitarian community, academia, media, government, and non-governmental organizations by providing access to data collected by DTM. Specifically, it offers non-sensitive Internally Displaced Person (IDP) figures, aggregated at various administrative levels including:
 
 - **Country Level (Admin 0)**
-- **State/Province Level (Admin 1)**
-- **Smaller Subnational Administrative Areas (Admin 2)**
+- **First-level Administrative Divisions (Admin 1)**
+- **Second-level Administrative Divisions (Admin2)**
 
 The data available through `dtmapi` can help organizations and individuals better understand and respond to internal displacement situations globally.
 
