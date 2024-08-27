@@ -19,7 +19,7 @@ dtmapi Documentation
 
 - **Country Level (Admin 0)**
 - **First-level Administrative Divisions (Admin 1)**
-- **Second-level Administrative Divisions (Admin2)**
+- **Second-level Administrative Divisions (Admin 2)**
 
 The data available through `dtmapi` can help organizations and individuals better understand and respond to internal displacement situations globally.
 
