@@ -4,9 +4,10 @@ from setuptools import find_packages, setup
 
 setup(
     name="dtmapi",
-    version="0.0.6",
+    version="0.0.8",
     packages=find_packages(),
     install_requires=["requests", "pandas"],
+    description="A Python package for fetching data from the IOM's Displacement Tracking Matrix (DTM).",
     author="Luong Bang Tran",
     author_email="lutran@iom.int",
     long_description=open("README.md").read(),

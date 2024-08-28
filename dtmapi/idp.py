@@ -1,10 +1,6 @@
-import os
-import sys
-from typing import Any, Dict, Optional, Union
-
 import pandas as pd
 import requests
-
+from typing import Any, Dict, Optional, Union
 from .config import IDP_ADMIN_0_API, IDP_ADMIN_1_API, IDP_ADMIN_2_API
 
 
@@ -32,7 +28,7 @@ def fetch_idp_data(
             if to_pandas:
                 return pd.DataFrame(data["result"])
             else:
-                return data
+                return data["result"]
         else:
             raise ValueError(data["errorMessages"][0])
     except requests.RequestException as e:

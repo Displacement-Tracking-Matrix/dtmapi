@@ -22,11 +22,19 @@ Here's a quick example to get you started:
 ```python
 import dtmapi
 
+# Get all country list for which DTM data is available.
+all_country_list = dtmapi.get_all_country_list()
+all_country_list.head()
+
+# Get all operation list for which DTM data is available.
+all_operation_list = dtmapi.get_all_operation_list()
+all_operation_list.head()
+
 # Get IDP Admin 0 Data for Ethiopia from Round 1 to Round 10
 idp_admin0_data = dtmapi.get_idp_admin0_data(CountryName='Ethiopia', FromRoundNumber=1, ToRoundNumber=10, to_pandas=True)
 idp_admin0_data.head()
 
-# Get IDP Admin 1 Data for Sudan  from from reporting date 2020-01-01 to 2024-08-15
+# Get IDP Admin 1 Data for Sudan from reporting date 2020-01-01 to 2024-08-15
 idp_admin1_data = dtmapi.get_idp_admin1_data(CountryName='Sudan', Admin1Name="Blue Nile", FromReportingDate='2020-01-01', ToReportingDate='2024-08-15', to_pandas=True)
 idp_admin1_data.head()
 
@@ -34,9 +42,13 @@ idp_admin1_data.head()
 idp_admin2_data = dtmapi.get_idp_admin2_data(Operation="Displacement due to conflict", CountryName='Lebanon', to_pandas=True)
 idp_admin2_data.head()
 ```
-
 ## Documentation
 Comprehensive documentation is available at [dtmapi.readthedocs.io](https://dtmapi.readthedocs.io/en/latest/index.html).
+
+## Source Code
+The source code for `dtmapi` is available on [GitHub](https://github.com/Displacement-tracking-Matrix/dtmapi).
+
+Feel free to explore the repository, contribute, or raise any issues you may encounter.
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

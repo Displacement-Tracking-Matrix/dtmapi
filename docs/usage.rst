@@ -15,6 +15,30 @@ To install `dtmapi`, use `pip`. Run the following command in your terminal:
 
 Here's a quick example to get you started:
 
+Get All Country List
+---------------------
+
+.. code-block:: python
+
+    import dtmapi
+
+    # Get All Country List for which DTM data is available.
+    all_country_list = dtmapi.get_all_country_list()
+    all_country_list.head()
+
+
+Get All Operation List
+---------------------
+
+.. code-block:: python
+
+    import dtmapi
+
+    # Get All Operation List for which DTM data is available.
+    all_operation_list = dtmapi.get_all_operation_list()
+    all_operation_list.head()
+
+
 Get IDP Admin 0 Data
 ---------------------
 
@@ -47,4 +71,8 @@ Get IDP Admin 2 Data
     # Get IDP Admin 2 Data for Lebanon
     idp_admin2_data = dtmapi.get_idp_admin2_data(Operation="Displacement due to conflict", CountryName='Lebanon', to_pandas=True)
     idp_admin2_data.head()
+
+
+
+
 

@@ -35,6 +35,12 @@ License
 
 This project is licensed under the MIT License. See the `LICENSE <https://github.com/Displacement-Tracking-Matrix/dtmapi/blob/main/LICENSE>`_ file for details.
 
+Source Code
+-------
+The source code for `dtmapi` is available on `GitHub <https://github.com/Displacement-tracking-Matrix/dtmapi>`_.
+
+Feel free to explore the repository, contribute, or raise any issues you may encounter.
+
 Contact
 -------
 
