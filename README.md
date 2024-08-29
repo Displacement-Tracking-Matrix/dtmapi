@@ -23,11 +23,11 @@ Here's a quick example to get you started:
 import dtmapi
 
 # Get all countries for which DTM data is publicly available through the API.
-all_country_list = dtmapi.get_all_country_list()
+all_country_list = dtmapi.get_all_countries()
 all_country_list.head()
 
 # Get all operations for which DTM data is publicly available through the API.
-all_operation_list = dtmapi.get_all_operation_list()
+all_operation_list = dtmapi.get_all_operations()
 all_operation_list.head()
 
 # Get IDP Admin 0 Data for Ethiopia from Round 1 to Round 10

@@ -32,7 +32,7 @@ def fetch_common_data(
         raise RuntimeError(f"API request failed: {e}")
 
 
-def get_all_country_list(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, Any]]:
+def get_all_countries(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
     Retrieve all countries for which DTM data is publicly available through the API.
 
@@ -42,7 +42,7 @@ def get_all_country_list(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str
     return fetch_common_data(COUNTRY_LIST_API, to_pandas)
 
 
-def get_all_operation_list(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, Any]]:
+def get_all_operations(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
     Retrieve all operations for which DTM data is publicly available through the API.
 

@@ -46,7 +46,7 @@ def get_idp_admin0_data(
     to_pandas: bool = True,
 ) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
-    Retrieve IDP Admin0 data based on specified parameters.
+    Retrieve IDP data at Admin 0 level based on specified parameters.
 
     At least one of the following parameters must be provided:
     Operation, CountryName, or Admin0Pcode.
@@ -96,7 +96,7 @@ def get_idp_admin1_data(
     to_pandas: bool = True,
 ) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
-    Retrieve IDP Admin1 data based on specified parameters.
+    Retrieve IDP data at Admin 1 level based on specified parameters.
 
     At least one of the following parameters must be provided:
     Operation, CountryName, or Admin0Pcode.
@@ -154,7 +154,7 @@ def get_idp_admin2_data(
     to_pandas: bool = True,
 ) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
-    Retrieve IDP Admin2 data based on specified parameters.
+    Retrieve IDP data at Admin 2 level based on specified parameters.
 
     At least one of the following parameters must be provided:
     Operation, CountryName, or Admin0Pcode.

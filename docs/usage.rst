@@ -15,7 +15,7 @@ To install `dtmapi`, use `pip`. Run the following command in your terminal:
 
 Here's a quick example to get you started:
 
-Get All Country List
+Get All Countries
 ---------------------
 
 .. code-block:: python
@@ -23,11 +23,11 @@ Get All Country List
     import dtmapi
 
     # Get all countries for which DTM data is publicly available through the API.
-    all_country_list = dtmapi.get_all_country_list()
+    all_country_list = dtmapi.get_all_countries()
     all_country_list.head()
 
 
-Get All Operation List
+Get All Operations
 ---------------------
 
 .. code-block:: python
@@ -35,7 +35,7 @@ Get All Operation List
     import dtmapi
 
     # Get all operations for which DTM data is publicly available through the API.
-    all_operation_list = dtmapi.get_all_operation_list()
+    all_operation_list = dtmapi.get_all_operations()
     all_operation_list.head()
 
 
