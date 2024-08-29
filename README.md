@@ -22,11 +22,11 @@ Here's a quick example to get you started:
 ```python
 import dtmapi
 
-# Get all country list for which DTM data is available.
+# Get all countries for which DTM data is publicly available through the API.
 all_country_list = dtmapi.get_all_country_list()
 all_country_list.head()
 
-# Get all operation list for which DTM data is available.
+# Get all operations for which DTM data is publicly available through the API.
 all_operation_list = dtmapi.get_all_operation_list()
 all_operation_list.head()
 

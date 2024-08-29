@@ -34,9 +34,9 @@ def fetch_common_data(
 
 def get_all_country_list(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
-    Retrieve a list of all country names and codes for which DTM data is available.
+    Retrieve all countries for which DTM data is publicly available through the API.
 
-    :return: A list of all country names and codes for which DTM data is available.
+    :return: All countries for which DTM data is publicly available through the API.
     :rtype: Union[pd.DataFrame, Dict[str, Any]]
     """
     return fetch_common_data(COUNTRY_LIST_API, to_pandas)
@@ -44,9 +44,9 @@ def get_all_country_list(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str
 
 def get_all_operation_list(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
-    Retrieve a list of all DTM operations for which data is available.
+    Retrieve all operations for which DTM data is publicly available through the API.
 
-    :return: A list of all DTM operations for which data is available.
+    :return: All operations for which DTM data is publicly available through the API.
     :rtype: Union[pd.DataFrame, Dict[str, Any]]
     """
     return fetch_common_data(OPERATION_LIST_API, to_pandas)

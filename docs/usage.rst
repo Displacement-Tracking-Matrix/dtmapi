@@ -22,7 +22,7 @@ Get All Country List
 
     import dtmapi
 
-    # Get All Country List for which DTM data is available.
+    # Get all countries for which DTM data is publicly available through the API.
     all_country_list = dtmapi.get_all_country_list()
     all_country_list.head()
 
@@ -34,7 +34,7 @@ Get All Operation List
 
     import dtmapi
 
-    # Get All Operation List for which DTM data is available.
+    # Get all operations for which DTM data is publicly available through the API.
     all_operation_list = dtmapi.get_all_operation_list()
     all_operation_list.head()
 
