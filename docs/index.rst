@@ -23,6 +23,8 @@ dtmapi Documentation
 
 The data available through `dtmapi` can help organizations and individuals better understand and respond to internal displacement situations globally.
 
+Please find more information about `DTM API <https://dtm.iom.int/data-and-analysis/dtm-api>`_ here.
+
 Key Features
 ------------
 
