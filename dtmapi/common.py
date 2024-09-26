@@ -57,3 +57,4 @@ def get_all_operations(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, 
     :rtype: Union[pd.DataFrame, Dict[str, Any]]
     """
     return fetch_common_data(OPERATION_LIST_API, to_pandas)
+
