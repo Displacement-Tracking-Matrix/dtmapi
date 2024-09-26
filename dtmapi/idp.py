@@ -20,17 +20,25 @@ def fetch_idp_data(
     :rtype: Union[pd.DataFrame, Dict[str, Any]]
     """
     try:
-        response = requests.get(api_url, params=params)
-        response.raise_for_status()
+        # Set headers (e.g., User-Agent) to mimic a browser request
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        }
+
+        # Send GET request to the API with parameters and headers
+        response = requests.get(api_url, params=params, headers=headers)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx and 5xx)
+
         data = response.json()
 
-        if data["isSuccess"]:
+        if data.get("isSuccess"):  # Check if the response indicates success
             if to_pandas:
                 return pd.DataFrame(data["result"])
             else:
                 return data["result"]
         else:
             raise ValueError(data["errorMessages"][0])
+
     except requests.RequestException as e:
         raise RuntimeError(f"API request failed: {e}")
 

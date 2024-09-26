@@ -19,8 +19,15 @@ def fetch_common_data(
     :rtype: Union[pd.DataFrame, Dict[str, Any]]
     """
     try:
-        response = requests.get(api_url)
-        response.raise_for_status()
+        # Set headers (e.g., User-Agent) to mimic a browser request
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        }
+
+        # Send GET request to the API with headers
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx and 5xx)
+
         data = response.json()
 
         if to_pandas:
@@ -50,3 +57,9 @@ def get_all_operations(to_pandas: bool = True) -> Union[pd.DataFrame, Dict[str, 
     :rtype: Union[pd.DataFrame, Dict[str, Any]]
     """
     return fetch_common_data(OPERATION_LIST_API, to_pandas)
+
+
+# Example usage
+if __name__ == "__main__":
+    a = get_all_countries()
+    print(a)
