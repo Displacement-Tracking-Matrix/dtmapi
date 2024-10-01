@@ -46,7 +46,7 @@ Feel free to explore the repository, contribute, or raise any issues you may enc
 Contact
 -------
 
-For any questions or feedback, please reach out to us at: `dtmsupport@iom.int <mailto:dtmsupport@iom.int>`_.
+For any questions or feedback, please reach out to us at: `dtmdataconsolidation@iom.int <mailto:dtmdataconsolidation@iom.int>`_.
 
 
 
