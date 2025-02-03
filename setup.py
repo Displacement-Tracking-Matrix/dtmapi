@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="dtmapi",
-    version="0.1.1",
+    version="0.1.2",
     packages=find_packages(),
     install_requires=["requests", "pandas"],
     description="A Python package for fetching data from the IOM's Displacement Tracking Matrix (DTM).",
@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     project_urls={
         "Github": "https://github.com/Displacement-Tracking-Matrix/dtmapi",
-        "Documentation": "https://pydtm.readthedocs.io/en/latest/",
+        "Documentation": "https://dtmapi.readthedocs.io/en/latest/",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
