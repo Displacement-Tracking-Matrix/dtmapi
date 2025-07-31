@@ -1,19 +1,10 @@
 Documentation
 =============
 
-dtmapi.idp
+dtmapi
 ----------------
 
-.. automodule:: dtmapi.idp
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-dtmapi.common
-----------------
-
-.. automodule:: dtmapi.common
+.. autoclass:: dtmapi.DTMApi
    :members:
    :undoc-members:
    :show-inheritance:
