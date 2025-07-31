@@ -247,26 +247,8 @@ class DTMApi:
         :type to_pandas: bool
 
         :returns: The IDP Admin2 data matching the specified criteria, either as a DataFrame or a JSON object.
-                If ``to_pandas`` is True, the DataFrame includes the following columns:
-                    - **id** (*int*): Unique identifier for the record.
-                    - **operation** (*str*): Name of DTM Operation for which the data was collected.
-                    - **admin0Name** (*str*): Country name.
-                    - **admin0Pcode** (*str*): Country code (ISO 3166-1 alpha-3).
-                    - **admin1Name** (*str*): Name of level 1 administrative boundaries.
-                    - **admin1Pcode** (*str*): Place code of level 1 administrative boundaries.
-                    - **admin2Name** (*str*): Name of level 2 administrative boundaries.
-                    - **admin2Pcode** (*str*): Place code of level 2 administrative boundaries.
-                    - **numPresentIdpInd** (*int*): Number of IDPs at Admin level.
-                    - **reportingDate** (*str*): Data reporting date/snapshot date.
-                    - **yearReportingDate** (*int*): Year of reporting/ snapshot date.
-                    - **monthReportingDate** (*int*): Month of reporting/ snapshot date.
-                    - **roundNumber** (*int*): Data collection round number.
-                    - **assessmentType** (*str*): Type of the assessment
-
         :rtype: Union[pd.DataFrame, Dict[str, Any]]
 
-        :raises ValueError: If the API response indicates an error.
-        :raises RuntimeError: If there is a network or request failure.
         """
         params = {
             "Operation": Operation,
