@@ -94,7 +94,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <hr>
 </section>
 <section id="whats-new-in-version-3" class="level2">
-<h2 class="anchored" data-anchor-id="whats-new-in-version-3">🚀 What’s New in Version 3?</h2>
+<h2 class="anchored" data-anchor-id="whats-new-in-version-3">What’s New in Version 3?</h2>
 <p>Version 3 of the DTM Displacement API introduces a range of new data indicators and improvements designed to enhance the analysis of internal displacement patterns. These enhancements aim to provide deeper insight into the dynamics of displacement by incorporating more granular and meaningful data points.</p>
 <p>Key improvements include:</p>
 <ul>
@@ -109,22 +109,21 @@ Understand the primary causes of displacement, including conflict, disasters, an
 <hr>
 </section>
 <section id="how-to-get-a-subscription-api-key" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-get-a-subscription-api-key">🔑 How to Get a subscription API Key</h2>
+<h2 class="anchored" data-anchor-id="how-to-get-a-subscription-api-key">How to Get a subscription API Key</h2>
 <p>Access to the DTM API now requires a personal API subscription key.</p>
 <ol type="1">
-<li><p><strong>Go to the DTM API Registration Portal:</strong><br>
+<li><p>Go to the <strong>DTM API Registration Portal</strong>:<br>
 <a href="https://dtm-apim-portal.iom.int/">https://dtm-apim-portal.iom.int/</a></p></li>
-<li><p><strong>Sign up or log in</strong> with your personal details (name, email, job title, organization, etc.).</p></li>
-<li><p><strong>Navigate to the “APIs” section and select “DTM-APIs”.</strong></p></li>
-<li><p><strong>Click “Subscribe”.</strong><br>
-You may be asked to enter a subscription name—choose a meaningful name for your subscription.</p></li>
-<li><p><strong>After your subscription is activated, your API key will be shown.</strong></p>
+<li><p>Sign up or log in with personal details such as name, email, job title, and organization.</p></li>
+<li><p>In the <strong>APIs</strong> section, select <strong>API-V3</strong>.</p></li>
+<li><p>Click <strong>Subscribe</strong>.<br>
+A subscription name is requested - choose a meaningful name for identification.</p></li>
+<li><p>Once the subscription is activated, the API key can be accessed under the <strong>Profile</strong> section in the top menu bar.</p>
 <ul>
-<li>This is your personal <code>Ocp-Apim-Subscription-Key</code>.</li>
-<li>The available endpoints for this API version will also be displayed.</li>
+<li>The <strong>Primary key</strong> shown there serves as the personal API KEY.</li>
+<li>The available endpoints for this API version are also listed.</li>
 </ul></li>
-<li><p><strong>Copy and store your API key securely.</strong><br>
-You will need this key to authenticate all requests using the <code>dtmapi</code> Python package.</p></li>
+<li><p>The API key should be copied and stored securely. It is required for authenticating all requests when using the <code>dtmapi</code> Python package.</p></li>
 </ol>
 <hr>
 </section>
@@ -139,28 +138,27 @@ You will need this key to authenticate all requests using the <code>dtmapi</code
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dtmapi <span class="im">import</span> DTMApi</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Instantiate the API client with your subscription key.</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>api <span class="op">=</span> DTMApi(subscription_key<span class="op">=</span><span class="st">"YOUR-API-KEY-HERE"</span>)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Get all countries for which DTM data is publicly available through the API.</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>all_country_list <span class="op">=</span> api.get_all_countries()</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>all_country_list.head()</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Get all operations for which DTM data is publicly available through the API.</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>all_operation_list <span class="op">=</span> api.get_all_operations()</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>all_operation_list.head()</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Get IDP Admin 0 Data for Ethiopia from Round 1 to Round 10.</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>idp_admin0_data <span class="op">=</span> api.get_idp_admin0_data(CountryName<span class="op">=</span><span class="st">'Ethiopia'</span>, FromRoundNumber<span class="op">=</span><span class="dv">1</span>, ToRoundNumber<span class="op">=</span><span class="dv">10</span>, to_pandas<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>idp_admin0_data.head()</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Get IDP Admin 1 Data for Sudan from reporting date 2020-01-01 to 2024-08-15.</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>idp_admin1_data <span class="op">=</span> api.get_idp_admin1_data(CountryName<span class="op">=</span><span class="st">'Sudan'</span>, Admin1Name<span class="op">=</span><span class="st">"Blue Nile"</span>,</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                                          FromReportingDate<span class="op">=</span><span class="st">'2020-01-01'</span>, ToReportingDate<span class="op">=</span><span class="st">'2024-08-15'</span>, to_pandas<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>idp_admin1_data.head()</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Get IDP Admin 2 Data for Lebanon.</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>idp_admin2_data <span class="op">=</span> api.get_idp_admin2_data(Operation<span class="op">=</span><span class="st">"Displacement due to conflict"</span>, CountryName<span class="op">=</span><span class="st">'Lebanon'</span>, to_pandas<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>idp_admin2_data.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>api <span class="op">=</span> DTMApi(subscription_key<span class="op">=</span><span class="st">"YOUR-API-KEY-HERE"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get all countries for which DTM data is publicly available through the API.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>all_country_list <span class="op">=</span> api.get_all_countries()</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>all_country_list.head()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Get all operations for which DTM data is publicly available through the API.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>all_operation_list <span class="op">=</span> api.get_all_operations()</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>all_operation_list.head()</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Get IDP Admin 0 Data for Ethiopia from Round 1 to Round 10.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>idp_admin0_data <span class="op">=</span> api.get_idp_admin0_data(CountryName<span class="op">=</span><span class="st">'Ethiopia'</span>, FromRoundNumber<span class="op">=</span><span class="dv">1</span>, ToRoundNumber<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>idp_admin0_data.head()</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Get IDP Admin 1 Data for Sudan from reporting date 2020-01-01 to 2024-08-15.</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>idp_admin1_data <span class="op">=</span> api.get_idp_admin1_data(CountryName<span class="op">=</span><span class="st">'Sudan'</span>, Admin1Name<span class="op">=</span><span class="st">"Blue Nile"</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                                          FromReportingDate<span class="op">=</span><span class="st">'2020-01-01'</span>, ToReportingDate<span class="op">=</span><span class="st">'2024-08-15'</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>idp_admin1_data.head()</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Get IDP Admin 2 Data for Lebanon.</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>idp_admin2_data <span class="op">=</span> api.get_idp_admin2_data(Operation<span class="op">=</span><span class="st">"Displacement due to conflict"</span>, CountryName<span class="op">=</span><span class="st">'Lebanon'</span>)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>idp_admin2_data.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="documentation" class="level2">
 <h2 class="anchored" data-anchor-id="documentation">Documentation</h2>

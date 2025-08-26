@@ -18,7 +18,7 @@ Please find more information about [DTM API](https://dtm.iom.int/data-and-analys
 
 ---
 
-## 🚀 What's New in Version 3?
+## What's New in Version 3?
 
 Version 3 of the DTM Displacement API introduces a range of new data indicators and improvements designed to enhance the analysis of internal displacement patterns. These enhancements aim to provide deeper insight into the dynamics of displacement by incorporating more granular and meaningful data points.
 
@@ -35,27 +35,26 @@ These new indicators help improve planning, policy-making, and response strategi
 
 ---
 
-## 🔑 How to Get a subscription API Key
+## How to Get a subscription API Key
 
 Access to the DTM API now requires a personal API subscription key.
 
-1. **Go to the DTM API Registration Portal:**  
+1. Go to the **DTM API Registration Portal**:  
    [https://dtm-apim-portal.iom.int/](https://dtm-apim-portal.iom.int/)
 
-2. **Sign up or log in** with your personal details (name, email, job title, organization, etc.).
+2. Sign up or log in with personal details such as name, email, job title, and organization.
 
-3. **Navigate to the "APIs" section and select "DTM-APIs".**
+3. In the **APIs** section, select **API-V3**.
 
-4. **Click "Subscribe".**  
-   You may be asked to enter a subscription name—choose a meaningful name for your subscription.
+4. Click **Subscribe**.  
+   A subscription name is requested - choose a meaningful name for identification.
 
-5. **After your subscription is activated, your API key will be shown.**
+5. Once the subscription is activated, the API key can be accessed under the **Profile** section in the top menu bar.
 
-   - This is your personal `Ocp-Apim-Subscription-Key`.
-   - The available endpoints for this API version will also be displayed.
+   - The **Primary key** shown there serves as the personal API KEY.
+   - The available endpoints for this API version are also listed.
 
-6. **Copy and store your API key securely.**  
-   You will need this key to authenticate all requests using the `dtmapi` Python package.
+6. The API key should be copied and stored securely. It is required for authenticating all requests when using the `dtmapi` Python package.
 
 ---
 
@@ -76,7 +75,9 @@ from dtmapi import DTMApi
 
 # Instantiate the API client with your subscription key.
 api = DTMApi(subscription_key="YOUR-API-KEY-HERE")
+```
 
+```python
 # Get all countries for which DTM data is publicly available through the API.
 all_country_list = api.get_all_countries()
 all_country_list.head()
