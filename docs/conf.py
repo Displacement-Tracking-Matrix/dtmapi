@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "dtmapi"
 copyright = "2025, Displacement Tracking Matrix"
 author = "Displacement Tracking Matrix"
-release = "0.1.4"
+release = "0.1.6"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -21,17 +21,21 @@ For more background, see the `DTM API overview <https://dtm.iom.int/data-and-ana
 
 ----
 
-What's New in Version 3
------------------------
+Key Features
+------------
 
-Version 3 introduces new features for enhanced displacement analysis:
+- **API Version Support:** Access both v3 (current) and v2 (legacy) API endpoints
+- **Enhanced Data Fields (v3):**
 
-- **Origin of Displacement:**  
-  Identify the geographical origin or location where displacement began, offering better tracking of movement patterns.
-- **Gender Disaggregation:**  
-  Access disaggregated data by gender to support more inclusive and targeted humanitarian responses.
-- **Reason for Displacement:**  
-  Understand the primary causes of displacement, including conflict, disasters, and other drivers.
+  - **Gender Disaggregation:** Male and female population breakdown
+  - **Origin of Displacement:** Track geographical origins of displacement
+  - **Displacement Reason:** Understand causes (conflict, disasters, etc.)
+
+- **Robust Data Validation:** Automatic validation of parameters (dates, ranges, required fields)
+- **Automatic Retry Logic:** Built-in exponential backoff for transient errors
+- **Custom Exception Handling:** Clear, specific error messages for different failure scenarios
+- **Comprehensive Logging:** Debug and track API interactions
+- **Flexible Configuration:** Customizable timeouts and retry settings
 
 ----
 
@@ -89,4 +93,5 @@ dtmdataconsolidation@iom.int
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   usage
+   dtmapi
