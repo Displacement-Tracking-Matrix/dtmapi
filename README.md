@@ -11,7 +11,8 @@
 # dtmapi
 
 ![PyPI](https://img.shields.io/pypi/v/dtmapi)
-![License](https://img.shields.io/github/license/Displacement-tracking-Matrix/dtmapi)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Documentation](https://img.shields.io/readthedocs/dtmapi)
 
 ## 📑 Table of Contents
 
@@ -137,15 +138,15 @@ The DTM API supports two versions: **v3 (current)** and **v2 (legacy)**. The pac
 
 ### Version Differences
 
-| Feature                       | v2 (Legacy)                          | v3 (Current)                         |
-| ----------------------------- | ------------------------------------ | ------------------------------------ |
-| IDP Admin 0, 1, 2 Data        | <span style="color: green;">✓</span> | <span style="color: green;">✓</span> |
-| Country List                  | <span style="color: green;">✓</span> | <span style="color: green;">✓</span> |
-| Operation List                | <span style="color: green;">✓</span> | <span style="color: green;">✓</span> |
-| **Gender/Sex Disaggregation** | <span style="color: red;">✗</span>   | <span style="color: green;">✓</span> |
-| **Origin of Displacement**    | <span style="color: red;">✗</span>   | <span style="color: green;">✓</span> |
-| **Displacement Reason**       | <span style="color: red;">✗</span>   | <span style="color: green;">✓</span> |
-| Status                        | Legacy                               | **Current**                          |
+| Feature                       | v2 (Legacy) | v3 (Current) |
+| ----------------------------- | ----------- | ------------ |
+| IDP Admin 0, 1, 2 Data        | ✅          | ✅           |
+| Country List                  | ✅          | ✅           |
+| Operation List                | ✅          | ✅           |
+| **Gender/Sex Disaggregation** | ❌          | ✅           |
+| **Origin of Displacement**    | ❌          | ✅           |
+| **Displacement Reason**       | ❌          | ✅           |
+| Status                        | Legacy      | **Current**  |
 
 ### Using API v3 (Default - Recommended)
 
