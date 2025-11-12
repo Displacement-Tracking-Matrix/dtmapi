@@ -11,9 +11,9 @@ setup(
     version=__version__,  # noqa: F821
     packages=find_packages(),
     install_requires=[
-        "requests>=2.32.5",
-        "pandas>=2.3.3",
-        "openpyxl>=3.1.3",
+        "requests>=2.31.0",
+        "pandas>=2.0.0",
+        "openpyxl>=3.1.0",
     ],
     extras_require={
         "test": [
@@ -22,8 +22,8 @@ setup(
             "pytest-mock>=3.15.1",
         ],
         "docs": [
-            "sphinx>=8.0.0",
-            "sphinx-rtd-theme>=3.0.2",
+            "sphinx>=7.0.0",
+            "sphinx-rtd-theme>=2.0.0",
         ],
         "dev": [
             "ipykernel>=7.1.0",
