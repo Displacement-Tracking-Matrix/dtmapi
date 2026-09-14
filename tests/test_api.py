@@ -339,7 +339,7 @@ class TestDTMApiRetryLogic(unittest.TestCase):
         error.response = mock_response
         self.assertFalse(self.api._is_retryable_error(error))
 
-    @patch("dtmapi.api.time.sleep")
+    @patch("dtmapi._client.time.sleep")
     @patch("requests.get")
     def test_retry_on_timeout(self, mock_get, mock_sleep):
         """Test that request is retried on timeout."""
@@ -358,7 +358,7 @@ class TestDTMApiRetryLogic(unittest.TestCase):
         self.assertEqual(mock_get.call_count, 3)
         self.assertEqual(mock_sleep.call_count, 2)
 
-    @patch("dtmapi.api.time.sleep")
+    @patch("dtmapi._client.time.sleep")
     @patch("requests.get")
     def test_retry_exhaustion(self, mock_get, mock_sleep):
         """Test that retries are exhausted and error is raised."""
