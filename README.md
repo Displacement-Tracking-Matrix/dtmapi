@@ -217,6 +217,34 @@ data_v2.columns.tolist()
 
 ---
 
+## Humanitarian Needs Assessment (HNA)
+
+The same package covers the DTM HNA endpoints. **The HNA API has its own
+subscription key** — the displacement key will not work for it:
+
+```python
+from dtmapi import DTMApi, DTMHnaApi
+
+# dtm_api = DTMApi(subscription_key="YOUR-DTM-API-KEY")
+dtm_hna = DTMHnaApi(subscription_key="YOUR-DTM-HNA-KEY")
+
+# Countries with HNA data, and the indicator dictionary
+dtm_hna.get_all_countries()
+dtm_hna.get_hna_data_catalog()
+
+# Admin 2 figures (Admin0Pcode and Year are required; paginated)
+data = dtm_hna.get_all_hna_admin2_data(Admin0Pcode="NGA", Year=2022)
+
+# The Excel export: a link, or the file itself
+dtm_hna.get_hna_download_url(Admin0Pcode="NGA", Year=2022)
+dtm_hna.download_hna_data(Admin0Pcode="NGA", Year=2022, file_path=".")
+```
+
+Set the keys via `DTMAPI_SUBSCRIPTION_KEY` and `DTMHNA_SUBSCRIPTION_KEY`.
+`DTMHnaApi` shares `DTMApi`'s retry, timeout and authentication behaviour; the
+HNA API is versioned separately, so it defaults to `api_version="v1"` while
+`DTMApi` defaults to `"v3"`.
+
 ## Documentation
 
 Comprehensive documentation is available at [dtmapi.readthedocs.io](https://dtmapi.readthedocs.io/en/latest/index.html).
