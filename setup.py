@@ -9,7 +9,7 @@ with open("dtmapi/version.py", "r") as f:
 setup(
     name="dtmapi",
     version=__version__,  # noqa: F821
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests", "tests.*"]),
     install_requires=[
         "requests>=2.31.0",
         "pandas>=2.0.0",
