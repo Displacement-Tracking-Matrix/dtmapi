@@ -1,7 +1,8 @@
 Usage Guide
 ===========
 
-This comprehensive guide covers installation, basic usage, and advanced features of the ``dtmapi`` library.
+This guide covers installation, the displacement (``DTMApi``) and Humanitarian Needs Assessment
+(``DTMHnaApi``) clients, configuration, and error handling.
 
 Installation
 ------------
@@ -11,6 +12,8 @@ Install ``dtmapi`` using pip:
 .. code-block:: bash
 
     pip install dtmapi
+
+``dtmapi`` requires Python 3.8 or later.
 
 Basic Usage
 -----------
@@ -31,7 +34,7 @@ Initialize API Client
    .. code-block:: python
 
       import os
-      api = DTMApi(subscription_key=os.environ.get("DTMAPI_SUBSCRIPTION_KEY"))
+      api = DTMApi(subscription_key=os.environ["DTMAPI_SUBSCRIPTION_KEY"])
 
 Get Available Countries and Operations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,7 +103,7 @@ IDP Admin 2 Data (District Level)
 API Versioning
 --------------
 
-The DTM API supports two versions: **v3 (current)** and **v2 (legacy)**. The package defaults to v3.
+The displacement API supports two versions: **v3 (current)** and **v2 (legacy)**. The package defaults to v3.
 
 Using API v3 (Default - Recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,6 +181,109 @@ Compare data from both versions:
     # Output: {'numberMales', 'numberFemales', 'idpOriginAdmin1Name',
     #          'idpOriginAdmin1Pcode', 'displacementReason'}
 
+Humanitarian Needs Assessment (HNA)
+-----------------------------------
+
+``DTMHnaApi`` provides access to the DTM Humanitarian Needs Assessment endpoints.
+
+Initialize the HNA Client
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The HNA API is a separate subscription with **its own key**; the displacement key does not work for it
+(see :ref:`how to get an HNA key <hna-key>` below). When no key is passed, ``DTMHnaApi`` reads ``DTMHNA_SUBSCRIPTION_KEY``. It never
+falls back to ``DTMAPI_SUBSCRIPTION_KEY``.
+
+.. code-block:: python
+
+    import os
+    from dtmapi import DTMHnaApi
+
+    hna = DTMHnaApi(subscription_key=os.environ["DTMHNA_SUBSCRIPTION_KEY"])
+
+The client targets the production gateway by default. Pass ``environment="dev"`` to use the development
+gateway. The HNA API is versioned separately from the displacement API, so ``api_version`` defaults to ``"v1"``.
+``timeout``, ``max_retries``, and ``retry_delay`` work as described in `Advanced Configuration`_.
+
+.. _hna-key:
+
+.. note::
+   To get an HNA key, follow the same registration steps in the `DTM API Registration Portal <https://dtm-apim-portal.iom.int/>`_,
+   but subscribe to the **HNA** API instead of **API-V3**.
+
+Countries and the Indicator Catalog
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    # Countries with HNA data
+    countries = hna.get_all_countries()
+
+    # The indicator catalog: one row per indicator in the Admin 2 data, with
+    # indicator_category, indicator_name, description, and data_type
+    catalog = hna.get_hna_data_catalog()
+
+The catalog describes the *columns* returned by the Admin 2 endpoint, so it can be used to select the
+indicators of one category:
+
+.. code-block:: python
+
+    needs = catalog[catalog["indicator_category"] == "Priority Needs"]
+    data = hna.get_all_hna_admin2_data(Admin0Pcode="NGA", Year=2023)
+    data[["m3695_meta_adm2_name", *needs["indicator_name"]]]
+
+Admin 2 Data
+~~~~~~~~~~~~
+
+``Admin0Pcode`` (ISO 3166-1 alpha-3 country code) and ``Year`` are both required. The endpoint is paginated;
+``get_all_hna_admin2_data`` requests every page and combines them:
+
+.. code-block:: python
+
+    data = hna.get_all_hna_admin2_data(Admin0Pcode="NGA", Year=2022)
+
+    # Filter by population group: a string, a comma-separated string, or a list
+    idps = hna.get_all_hna_admin2_data(
+        Admin0Pcode="NGA",
+        Year=2022,
+        PopulationGroup=["IDP", "IDP returnee"],
+    )
+
+``max_pages`` (default: 100) caps the number of pages requested; a warning is logged if the cap is reached.
+To handle paging yourself, ``get_hna_admin2_data`` returns a single page:
+
+.. code-block:: python
+
+    first_page = hna.get_hna_admin2_data(Admin0Pcode="NGA", Year=2022, Page=1)
+
+Downloading the Excel Export
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The API prepares an ``.xlsx`` export and returns a short-lived download link (valid for about ten minutes).
+``download_hna_data`` does both steps:
+
+.. code-block:: python
+
+    import pandas as pd
+
+    # Save to a directory (the API's file name is used) or to an explicit path
+    path = hna.download_hna_data(Admin0Pcode="NGA", Year=2022, file_path=".")
+    df = pd.read_excel(path)
+
+    # Without file_path, the file contents are returned as bytes
+    content = hna.download_hna_data(Admin0Pcode="NGA", Year=2022)
+
+To get the link itself, for example to open it in a browser, use ``get_hna_download_url``:
+
+.. code-block:: python
+
+    info = hna.get_hna_download_url(Admin0Pcode="NGA", Year=2022)
+    info["downloadUrl"]  # link to the file
+    info["fileName"]     # e.g. "Report_NGA_2022__20260914101710.xlsx"
+    info["expiresAt"]    # expiry timestamp as returned by the API
+    info.get("expires_at")  # the same, as a timezone-aware datetime (None if unparseable)
+
+The subscription key is not sent to the download host; the link carries its own access token.
+
 Advanced Configuration
 ----------------------
 
@@ -192,9 +298,9 @@ Customize Timeout and Retry Settings
     api = DTMApi(
         subscription_key="YOUR-API-KEY-HERE",
         api_version="v3",
-        timeout=60,        # 60 second timeout (default: 30)
+        timeout=60,        # 60-second timeout (default: 30)
         max_retries=5,     # Retry up to 5 times (default: 3)
-        retry_delay=2.0    # 2 second base delay between retries (default: 1.0)
+        retry_delay=2.0    # 2-second base delay between retries (default: 1)
     )
 
 The retry logic uses exponential backoff and automatically retries on:
@@ -203,6 +309,8 @@ The retry logic uses exponential backoff and automatically retries on:
 - HTTP 500, 502, 503, 504 (Server errors)
 - Timeout errors
 - Connection errors
+
+Authentication failures (HTTP 401/403) are not retried.
 
 Error Handling
 --------------
@@ -221,8 +329,25 @@ Exception Types
         DTMApiRequestError,       # Request failures
         DTMApiTimeoutError,       # Timeout errors
         DTMApiVersionError,       # Invalid API version
-        ValidationError           # Parameter validation errors
+        ValidationError           # Parameter validation errors (a ValueError, not a DTMApiError)
     )
+
+``DTMHnaApi`` raises its own variants, so an error names the service that failed:
+
+.. code-block:: python
+
+    from dtmapi import (
+        HNAError,          # Base exception for HNA errors
+        HNAAuthError,      # also a DTMAuthenticationError
+        HNAResponseError,  # also a DTMApiResponseError
+        HNARequestError,   # also a DTMApiRequestError
+        HNATimeoutError,   # also a DTMApiTimeoutError
+        HNAVersionError,   # also a DTMApiVersionError (invalid version or environment)
+    )
+
+Each HNA exception also subclasses its ``DTMApi`` counterpart and ``DTMApiError``, so a single
+``except DTMApiError`` handles API failures from both clients. Invalid parameters raise
+``ValidationError``, a subclass of ``ValueError``, which must be caught separately.
 
 Handling Validation Errors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,7 +366,7 @@ Handling Validation Errors
         )
     except ValidationError as e:
         print(f"Validation Error: {e}")
-        # Output: FromReportingDate must be in YYYY-MM-DD format
+        # Output: FromReportingDate must be in YYYY-MM-DD format, got: 01-01-2024
 
     try:
         # Invalid date range
@@ -252,7 +377,8 @@ Handling Validation Errors
         )
     except ValidationError as e:
         print(f"Validation Error: {e}")
-        # Output: FromReportingDate must be before or equal to ToReportingDate
+        # Output: FromReportingDate (2024-12-31) must be before or equal to
+        #         ToReportingDate (2024-01-01)
 
     try:
         # Missing required parameters
@@ -306,13 +432,24 @@ The package uses Python's standard logging module:
     # - Retry attempts
     # - Error messages
 
+.. note::
+   The subscription key is sent in a request header and is never written to the
+   logs by ``dtmapi``. The access token in an HNA download link is also kept out
+   of ``dtmapi``'s log messages.
+
+   At ``DEBUG`` level, ``urllib3`` (used by ``requests``) logs request URLs including their query
+   strings, so the download link's token can appear in its log output. When downloading HNA exports
+   with debug logging enabled, raise that logger's level:
+   ``logging.getLogger("urllib3").setLevel(logging.INFO)``.
+
 Data Export
 -----------
 
 Export Retrieved Data
 ~~~~~~~~~~~~~~~~~~~~~
 
-All data is returned as pandas DataFrames, which can be easily exported:
+By default, data is returned as pandas DataFrames (pass ``to_pandas=False`` to get the raw records instead),
+which can be exported with the usual pandas methods:
 
 .. code-block:: python
 
@@ -324,7 +461,7 @@ All data is returned as pandas DataFrames, which can be easily exported:
     # Export to CSV
     data.to_csv('sudan_idp_data.csv', index=False)
 
-    # Export to Excel (requires openpyxl)
+    # Export to Excel (openpyxl is installed with dtmapi)
     data.to_excel('sudan_idp_data.xlsx', index=False)
 
     # Export to JSON
@@ -336,20 +473,20 @@ All data is returned as pandas DataFrames, which can be easily exported:
 Complete Example
 ----------------
 
-Here's a complete example combining multiple features:
+The following example combines several features:
 
 .. code-block:: python
 
     import os
     import logging
-    from dtmapi import DTMApi, ValidationError
+    from dtmapi import DTMApi, DTMApiError, ValidationError
 
     # Configure logging
     logging.basicConfig(level=logging.INFO)
 
     # Initialize API client with custom settings
     api = DTMApi(
-        subscription_key=os.environ.get("DTMAPI_SUBSCRIPTION_KEY"),
+        subscription_key=os.environ["DTMAPI_SUBSCRIPTION_KEY"],
         api_version="v3",
         timeout=60,
         max_retries=5
@@ -381,8 +518,8 @@ Here's a complete example combining multiple features:
 
     except ValidationError as e:
         print(f"Validation error: {e}")
-    except Exception as e:
-        print(f"Error: {e}")
+    except DTMApiError as e:
+        print(f"API error: {e}")
 
 Best Practices
 --------------
@@ -394,7 +531,7 @@ Best Practices
    .. code-block:: python
 
       import os
-      api = DTMApi(subscription_key=os.environ.get("DTMAPI_SUBSCRIPTION_KEY"))
+      api = DTMApi(subscription_key=os.environ["DTMAPI_SUBSCRIPTION_KEY"])
 
 2. **Use v3 API for New Projects**
 
@@ -426,23 +563,10 @@ Best Practices
           # Handle authentication errors
           pass
 
-5. **Validate Parameters Before Making Requests**
+5. **Fetch All HNA Pages**
 
-   The package automatically validates parameters, but you can catch these early:
-
-   .. code-block:: python
-
-      from datetime import datetime
-
-      # Validate dates before making request
-      from_date = '2020-01-01'
-      to_date = '2024-12-31'
-
-      try:
-          datetime.strptime(from_date, '%Y-%m-%d')
-          datetime.strptime(to_date, '%Y-%m-%d')
-      except ValueError:
-          print("Invalid date format")
+   Prefer ``get_all_hna_admin2_data`` over ``get_hna_admin2_data``: the single-page method
+   returns only one page of results.
 
 Additional Resources
 --------------------

@@ -9,7 +9,7 @@ caller working with both clients can write a single handler::
 
     try:
         idp = DTMApi().get_idp_admin0_data(CountryName="Chad")
-        hna = DTMHnaApi().get_hna_admin2_data(CountryName="Chad")
+        hna = DTMHnaApi().get_hna_admin2_data(Admin0Pcode="TCD", Year=2024)
     except DTMApiError as exc:
         ...
 

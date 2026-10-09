@@ -17,9 +17,9 @@ setup(
     ],
     extras_require={
         "test": [
-            "pytest>=9.0.0",
-            "pytest-cov>=7.0.0",
-            "pytest-mock>=3.15.1",
+            "pytest>=7.0",
+            "pytest-cov>=4.0",
+            "pytest-mock>=3.10",
         ],
         "docs": [
             "sphinx>=7.0.0",

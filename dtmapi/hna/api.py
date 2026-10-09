@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Union
 
 import pandas as pd
-import requests
 
 from dtmapi._client import BaseDTMClient
 from dtmapi.hna.config import (
@@ -32,7 +31,7 @@ class DTMHnaApi(BaseDTMClient):
     """
     Python interface to the DTM Humanitarian Needs Assessment (HNA) endpoints.
 
-    Shares the request handling, retry behaviour and authentication of
+    Shares the request handling, retry behavior, and authentication of
     :class:`dtmapi.DTMApi`, but has its own endpoints, parameters and version
     line (HNA is on v1; the displacement API is on v3).
 
@@ -71,7 +70,7 @@ class DTMHnaApi(BaseDTMClient):
         self,
         subscription_key: Optional[str] = None,
         api_version: str = "v1",
-        environment: str = "dev",
+        environment: str = "prod",
         timeout: Optional[int] = None,
         max_retries: Optional[int] = None,
         retry_delay: Optional[float] = None,
@@ -85,7 +84,8 @@ class DTMHnaApi(BaseDTMClient):
         :type subscription_key: Optional[str]
         :param api_version: HNA API version to use (currently only "v1").
         :type api_version: str
-        :param environment: Gateway environment to target.
+        :param environment: Gateway environment to target: "prod" (default)
+            or "dev" for testing against the development gateway.
         :type environment: str
         :param timeout: Request timeout in seconds (default: 30).
         :type timeout: Optional[int]
@@ -356,8 +356,9 @@ class DTMHnaApi(BaseDTMClient):
         """
         Retrieve every page of HNA Admin 2 data for one country and year.
 
-        Requests successive pages until one comes back empty, then combines
-        them. Prefer this over :meth:`get_hna_admin2_data` unless you want to
+        Requests successive pages until the API reports no next page (or, if
+        the response has no pagination block, until a page comes back empty),
+        then combines them. Prefer this over :meth:`get_hna_admin2_data` unless you want to
         handle paging yourself — a single-page call silently gives you only
         the first slice of the results.
 
@@ -465,15 +466,24 @@ class DTMHnaApi(BaseDTMClient):
         Parse the API's expiresAt timestamp.
 
         .NET writes seven fractional digits, which ``fromisoformat`` rejects,
-        so the fraction is trimmed to microseconds first.
+        so the fraction is trimmed to microseconds first. A trailing ``Z`` is
+        rewritten as ``+00:00``, which ``fromisoformat`` only accepts from
+        Python 3.11.
         """
         if not value:
             return None
         cleaned = re.sub(r"(\.\d{6})\d+", r"\1", value)
+        if cleaned.endswith(("Z", "z")):
+            cleaned = cleaned[:-1] + "+00:00"
         try:
-            return datetime.fromisoformat(cleaned)
+            parsed = datetime.fromisoformat(cleaned)
         except ValueError:
             return None
+        # A timestamp without an offset is taken as UTC, so it can be compared
+        # with an aware "now".
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed
 
     def download_hna_data(
         self,
@@ -489,7 +499,12 @@ class DTMHnaApi(BaseDTMClient):
         Two requests: the API prepares the file and returns a short-lived blob
         link (about ten minutes), which is then fetched. The blob is on a
         different host, so the subscription key is deliberately not sent with
-        the second request.
+        the second request, and the link's access token is kept out of logs
+        and error messages.
+
+        The blob fetch is retried like any other request, so against an
+        unreachable host this can take up to ``(max_retries + 1) * timeout``
+        seconds plus the backoff delays before it gives up.
 
         The file is an ``.xlsx`` workbook, so it is returned as bytes rather
         than a DataFrame. To read it::
@@ -533,14 +548,20 @@ class DTMHnaApi(BaseDTMClient):
 
         self._logger.debug(f"Fetching the export file from blob storage: {file_name}")
         try:
-            # No subscription key here: the blob is on a different host and the
-            # link already carries its own access token.
-            response = requests.get(url, timeout=self.timeout)
-            response.raise_for_status()
-        except requests.RequestException as e:
+            # external=True: no subscription key (the blob is on a different host
+            # and the link carries its own access token), and the token is kept
+            # out of logs and error messages.
+            content = self._fetch_data(url, as_bytes=True, external=True)
+        except (self.REQUEST_ERROR, self.TIMEOUT_ERROR) as e:
+            # A 401/403 from the blob means a bad or expired link, not a bad key.
+            status = getattr(e, "status_code", None)
+            if status in (401, 403):
+                raise self.REQUEST_ERROR(
+                    f"Failed to download {file_name}: the download link was rejected "
+                    f"({status}); it may have expired — request a new one."
+                ) from e
             raise self.REQUEST_ERROR(f"Failed to download {file_name}: {e}") from e
 
-        content = response.content
         self._logger.info(f"Downloaded {file_name} ({len(content)} bytes)")
 
         if file_path is None:

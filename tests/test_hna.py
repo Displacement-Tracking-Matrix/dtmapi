@@ -8,6 +8,7 @@ in the shared base rather than in ``dtmapi.api``.
 import json
 import pathlib
 import tempfile
+import traceback
 import unittest
 from unittest import mock
 
@@ -168,7 +169,7 @@ class TestHna(unittest.TestCase):
     def test_defaults(self):
         hna = DTMHnaApi(subscription_key=KEY)
         self.assertEqual(hna.api_version, "v1")
-        self.assertEqual(hna.environment, "dev")
+        self.assertEqual(hna.environment, "prod")
 
     def test_bad_version(self):
         with self.assertRaises(HNAVersionError):
@@ -214,6 +215,9 @@ class TestHna(unittest.TestCase):
         dev = DTMHnaApi(subscription_key=KEY, environment="dev")._get_endpoint("admin2")
         self.assertIn("dtm-apim-dev.iom.int", dev)
         self.assertTrue(dev.endswith("/HNA/v1/admin2"))
+        prod = DTMHnaApi(subscription_key=KEY)._get_endpoint("admin2")
+        self.assertIn("dtm-apim.iom.int", prod)
+        self.assertNotIn("dtm-apim-dev", prod)
 
     def test_surface_matches_the_four_hna_endpoints(self):
         hna = DTMHnaApi(subscription_key=HNA_KEY)
@@ -388,9 +392,13 @@ class TestHna(unittest.TestCase):
         "expiresAt": "2026-09-14T10:27:10.6753967+00:00",
     }
 
-    def _routed_get(self, blob_content=b"PK\x03\x04 fake xlsx", blob_error=None):
+    def _routed_get(self, blob_content=b"PK\x03\x04 fake xlsx", blob_error=None,
+                    blob_failures=None, info=None):
         """
         One mock for both hops.
+
+        ``blob_error`` makes every blob request fail; ``blob_failures`` makes
+        only the first that many fail, to exercise the retry.
 
         dtmapi.hna.api.requests and dtmapi._client.requests are the same module
         object, so they cannot be patched separately. Dispatching on the URL is
@@ -403,11 +411,14 @@ class TestHna(unittest.TestCase):
             if "blob.core.windows.net" in url:
                 if blob_error is not None:
                     raise blob_error
+                blob_calls = sum(1 for u, _ in calls if "blob.core.windows.net" in u)
+                if blob_failures and blob_calls <= blob_failures:
+                    raise requests.ConnectionError("transient blob failure")
                 r = requests.Response()
                 r.status_code = 200
                 r._content = blob_content
                 return r
-            return fake_response(self.DOWNLOAD_INFO)
+            return fake_response(info or self.DOWNLOAD_INFO)
 
         return side_effect, calls
 
@@ -439,7 +450,7 @@ class TestHna(unittest.TestCase):
         blob_url, blob_kwargs = calls[1]
         self.assertEqual(blob_url, self.DOWNLOAD_INFO["downloadUrl"])
         # Different host: the subscription key must not travel with it.
-        self.assertNotIn("headers", blob_kwargs)
+        self.assertNotIn("Ocp-Apim-Subscription-Key", blob_kwargs.get("headers") or {})
 
     @mock.patch("dtmapi._client.requests.get")
     def test_download_to_directory_uses_the_api_filename(self, get):
@@ -471,12 +482,132 @@ class TestHna(unittest.TestCase):
 
     @mock.patch("dtmapi._client.requests.get")
     def test_blob_failure_names_the_file(self, get):
-        get.side_effect, _ = self._routed_get(
+        get.side_effect, calls = self._routed_get(
             blob_error=requests.ConnectionError("blob unreachable")
         )
+        hna = DTMHnaApi(subscription_key=HNA_KEY, retry_delay=0)
+        with self.assertRaises(HNARequestError) as ctx:
+            hna.download_hna_data(Admin0Pcode="NGA", Year=2022)
+        self.assertIn("Report_NGA_2022", str(ctx.exception))
+        blob_calls = [u for u, _ in calls if "blob.core.windows.net" in u]
+        self.assertEqual(len(blob_calls), hna.max_retries + 1)
+
+    @mock.patch("dtmapi._client.requests.get")
+    def test_blob_download_retries_transient_errors(self, get):
+        get.side_effect, calls = self._routed_get(blob_content=b"payload", blob_failures=1)
+        out = DTMHnaApi(subscription_key=HNA_KEY, retry_delay=0).download_hna_data(
+            Admin0Pcode="NGA", Year=2022
+        )
+        self.assertEqual(out, b"payload")
+        self.assertEqual(sum(1 for u, _ in calls if "blob.core.windows.net" in u), 2)
+
+    @mock.patch("dtmapi._client.requests.get")
+    def test_blob_403_is_a_request_error_not_an_auth_error(self, get):
+        # An expired blob link answers 403; that is not a subscription-key problem.
+        def side_effect(url, **kwargs):
+            if "blob.core.windows.net" in url:
+                r = fake_response({}, status=403)
+                r.reason = "Forbidden"
+                return r
+            return fake_response(self.DOWNLOAD_INFO)
+
+        get.side_effect = side_effect
         with self.assertRaises(HNARequestError) as ctx:
             DTMHnaApi(subscription_key=HNA_KEY).download_hna_data(Admin0Pcode="NGA", Year=2022)
-        self.assertIn("Report_NGA_2022", str(ctx.exception))
+        self.assertNotIsInstance(ctx.exception, HNAAuthError)
+        msg = str(ctx.exception)
+        self.assertIn("Report_NGA_2022", msg)
+        # The message must point at the link, not send the user to rotate a key.
+        self.assertIn("expired", msg)
+        self.assertNotIn("key", msg.lower())
+
+    # A signed blob link: the query string is an access token.
+    SIGNED_INFO = {
+        **DOWNLOAD_INFO,
+        "downloadUrl": "https://x.blob.core.windows.net/c/Report_NGA_2022.xlsx?sv=1&sig=SECRET",
+    }
+
+    @mock.patch("dtmapi._client.requests.get")
+    def test_blob_token_stays_out_of_logs_and_errors_on_failure(self, get):
+        signed = self.SIGNED_INFO["downloadUrl"]
+
+        def side_effect(url, **kwargs):
+            if "blob.core.windows.net" in url:
+                # requests puts the path and query into its error text.
+                raise requests.ConnectionError(
+                    f"HTTPSConnectionPool: Max retries exceeded with url: {signed[signed.index('/c/'):]}"
+                )
+            return fake_response(self.SIGNED_INFO)
+
+        get.side_effect = side_effect
+        hna = DTMHnaApi(subscription_key=HNA_KEY, retry_delay=0)
+        with self.assertLogs("dtmapi", level="DEBUG") as logs:
+            with self.assertRaises(HNARequestError) as ctx:
+                hna.download_hna_data(Admin0Pcode="NGA", Year=2022)
+        self.assertNotIn("SECRET", str(ctx.exception))
+        for line in logs.output:
+            self.assertNotIn("SECRET", line)
+        # Nor in the chained causes a caller would see via logger.exception().
+        exc = ctx.exception
+        self.assertNotIn(
+            "SECRET", "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        )
+
+    @mock.patch("dtmapi._client.requests.get")
+    def test_blob_403_traceback_does_not_carry_the_token(self, get):
+        signed = self.SIGNED_INFO["downloadUrl"]
+
+        def side_effect(url, **kwargs):
+            if "blob.core.windows.net" in url:
+                r = fake_response({}, status=403)
+                r.reason = "Forbidden"
+                r.url = signed  # requests' HTTPError text includes the full URL
+                return r
+            return fake_response(self.SIGNED_INFO)
+
+        get.side_effect = side_effect
+        with self.assertRaises(HNARequestError) as ctx:
+            DTMHnaApi(subscription_key=HNA_KEY).download_hna_data(Admin0Pcode="NGA", Year=2022)
+        exc = ctx.exception
+        self.assertIn("expired", str(exc))
+        self.assertNotIn(
+            "SECRET", "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        )
+
+    @mock.patch("dtmapi._client.requests.get")
+    def test_blob_token_stays_out_of_logs_on_success(self, get):
+        def side_effect(url, **kwargs):
+            if "blob.core.windows.net" in url:
+                r = requests.Response()
+                r.status_code = 200
+                r._content = b"payload"
+                return r
+            return fake_response(self.SIGNED_INFO)
+
+        get.side_effect = side_effect
+        with self.assertLogs("dtmapi", level="DEBUG") as logs:
+            out = DTMHnaApi(subscription_key=HNA_KEY).download_hna_data(
+                Admin0Pcode="NGA", Year=2022
+            )
+        self.assertEqual(out, b"payload")
+        for line in logs.output:
+            self.assertNotIn("SECRET", line)
+
+    def test_expiry_with_z_suffix_is_parsed(self):
+        parsed = DTMHnaApi._parse_expiry("2030-01-01T00:00:00Z")
+        self.assertIsNotNone(parsed)
+        self.assertIsNotNone(parsed.tzinfo)
+        self.assertEqual(parsed.year, 2030)
+
+    @mock.patch("dtmapi._client.requests.get")
+    def test_expiry_without_offset_is_treated_as_utc(self, get):
+        info = {**self.DOWNLOAD_INFO, "expiresAt": "2026-09-14T10:27:10.6753967"}
+        get.side_effect, _ = self._routed_get(blob_content=b"payload", info=info)
+        hna = DTMHnaApi(subscription_key=HNA_KEY)
+        pointer = hna.get_hna_download_url(Admin0Pcode="NGA", Year=2022)
+        self.assertIsNotNone(pointer["expires_at"].tzinfo)
+        # Comparing with an aware "now" must not raise TypeError.
+        self.assertEqual(hna.download_hna_data(Admin0Pcode="NGA", Year=2022), b"payload")
 
     def test_download_requires_the_same_params(self):
         with self.assertRaises(ValidationError):

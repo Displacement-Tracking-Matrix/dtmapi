@@ -17,11 +17,12 @@
 ## 📑 Table of Contents
 
 - [About](#about)
-- [What's New in Version 3?](#whats-new-in-version-3)
-- [How to Get an API Key](#how-to-get-a-subscription-api-key)
+- [What's New in API v3?](#whats-new-in-api-v3)
+- [How to Get a Subscription API Key](#how-to-get-a-subscription-api-key)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [API Versions](#api-versions)
+- [Humanitarian Needs Assessment (HNA)](#humanitarian-needs-assessment-hna)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
@@ -29,11 +30,14 @@
 
 ## About
 
-`dtmapi` is a Python package developed by [Displacement Tracking Matrix (DTM)](https://dtm.iom.int/). This package allows the humanitarian community, academia, media, government, and non-governmental organizations to utilize the data collected by DTM. It provides non-sensitive Internally Displaced Person (IDP) figures, aggregated at the country, Admin 1 (states, provinces, or equivalent), and Admin 2 (smaller subnational administrative areas) levels.
+`dtmapi` is a Python package developed by the [Displacement Tracking Matrix (DTM)](https://dtm.iom.int/). It allows the humanitarian community, academia, media, governments, and non-governmental organizations to use the data collected by DTM. It provides two clients:
 
-Please find more information about [DTM API](https://dtm.iom.int/data-and-analysis/dtm-api) here.
+- **`DTMApi`** returns non-sensitive Internally Displaced Person (IDP) figures, aggregated at the country (Admin 0), Admin 1 (states, provinces, or equivalent), and Admin 2 (smaller subnational administrative areas) levels.
+- **`DTMHnaApi`** returns Humanitarian Needs Assessment (HNA) indicators at the Admin 2 level, together with a catalog describing each indicator.
 
-## What's New in Version 3?
+Results are returned as pandas DataFrames. More information about the DTM API is available on the [DTM website](https://dtm.iom.int/data-and-analysis/dtm-api).
+
+## What's New in API v3?
 
 Version 3 of the DTM Displacement API introduces a range of new data indicators and improvements designed to enhance the analysis of internal displacement patterns. These enhancements aim to provide deeper insight into the dynamics of displacement by incorporating more granular and meaningful data points.
 
@@ -62,16 +66,21 @@ These new indicators help improve planning, policy-making, and response strategi
 3. In the **APIs** section, select **API-V3**.
 
 4. Click **Subscribe**.
-   A subscription name is requested - choose a meaningful name for identification.
+   A subscription name may be requested; choose a meaningful name for identification.
 
 5. Once the subscription is activated, the API key can be accessed under the **Profile** section in the top menu bar.
 
-   - The **Primary key** shown there serves as your personal API KEY.
+   - The **Primary key** shown there serves as your personal API key.
    - The available endpoints for this API version are also listed.
 
 6. Copy and store your API key securely. It is required for authenticating all requests.
 
 > **💡 Tip:** Use environment variables to store your API key instead of hardcoding it in your scripts.
+> `DTMApi` reads `DTMAPI_SUBSCRIPTION_KEY` when no key is passed.
+
+### HNA Subscription Key
+
+The HNA API is a separate subscription with its own key; the displacement key does not work for it. To get one, follow the same steps in the [DTM API Registration Portal](https://dtm-apim-portal.iom.int/), but subscribe to the **HNA** API instead of **API-V3**. `DTMHnaApi` reads `DTMHNA_SUBSCRIPTION_KEY` when no key is passed.
 
 ---
 
@@ -83,17 +92,21 @@ These new indicators help improve planning, policy-making, and response strategi
 pip install dtmapi
 ```
 
+`dtmapi` requires Python 3.8 or later.
+
 ---
 
 ## Quick Start
 
-Here's a complete example to get you started:
+A complete example to get you started. Each call returns a pandas DataFrame; `.head()` previews the first rows in a notebook.
 
 ```python
+import os
+
 from dtmapi import DTMApi
 
 # Initialize the API client with your subscription key
-api = DTMApi(subscription_key="YOUR-API-KEY-HERE")
+api = DTMApi(subscription_key=os.environ["DTMAPI_SUBSCRIPTION_KEY"])
 
 # Get all available countries
 all_countries = api.get_all_countries()
@@ -134,7 +147,7 @@ idp_admin2_data.head()
 
 > **📌 Recommended:** Use **v3** for all new projects. It includes enhanced demographic data and displacement context.
 
-The DTM API supports two versions: **v3 (current)** and **v2 (legacy)**. The package defaults to v3, which is recommended for all new projects.
+The displacement API supports two versions: **v3 (current)** and **v2 (legacy)**. The package defaults to v3.
 
 ### Version Differences
 
@@ -220,30 +233,44 @@ data_v2.columns.tolist()
 ## Humanitarian Needs Assessment (HNA)
 
 The same package covers the DTM HNA endpoints. **The HNA API has its own
-subscription key** — the displacement key will not work for it:
+subscription key** (see [HNA subscription key](#hna-subscription-key)); the
+displacement key will not work for it.
 
 ```python
-from dtmapi import DTMApi, DTMHnaApi
+import os
 
-# dtm_api = DTMApi(subscription_key="YOUR-DTM-API-KEY")
-dtm_hna = DTMHnaApi(subscription_key="YOUR-DTM-HNA-KEY")
+from dtmapi import DTMHnaApi
 
-# Countries with HNA data, and the indicator dictionary
-dtm_hna.get_all_countries()
-dtm_hna.get_hna_data_catalog()
+hna = DTMHnaApi(subscription_key=os.environ["DTMHNA_SUBSCRIPTION_KEY"])
 
-# Admin 2 figures (Admin0Pcode and Year are required; paginated)
-data = dtm_hna.get_all_hna_admin2_data(Admin0Pcode="NGA", Year=2022)
+# Countries with HNA data, and the indicator catalog (one row per column
+# returned by the Admin 2 endpoint, with its category and description)
+countries = hna.get_all_countries()
+catalog = hna.get_hna_data_catalog()
 
-# The Excel export: a link, or the file itself
-dtm_hna.get_hna_download_url(Admin0Pcode="NGA", Year=2022)
-dtm_hna.download_hna_data(Admin0Pcode="NGA", Year=2022, file_path=".")
+# Admin 2 indicators for one country and year. Admin0Pcode and Year are
+# required; all pages are fetched and combined.
+data = hna.get_all_hna_admin2_data(Admin0Pcode="NGA", Year=2022)
+
+# Optionally filter by population group (a string or a list)
+idps = hna.get_all_hna_admin2_data(
+    Admin0Pcode="NGA", Year=2022, PopulationGroup=["IDP", "IDP returnee"]
+)
+
+# The Excel export: save the file (a directory uses the API's file name) ...
+path = hna.download_hna_data(Admin0Pcode="NGA", Year=2022, file_path=".")
+
+# ... or get a short-lived download link (about ten minutes)
+info = hna.get_hna_download_url(Admin0Pcode="NGA", Year=2022)
+print(info["downloadUrl"], info["fileName"], info["expiresAt"])
 ```
 
-Set the keys via `DTMAPI_SUBSCRIPTION_KEY` and `DTMHNA_SUBSCRIPTION_KEY`.
-`DTMHnaApi` shares `DTMApi`'s retry, timeout and authentication behaviour; the
+`DTMHnaApi` shares `DTMApi`'s retry, timeout, and authentication behavior. The
 HNA API is versioned separately, so it defaults to `api_version="v1"` while
-`DTMApi` defaults to `"v3"`.
+`DTMApi` defaults to `"v3"`. `DTMHnaApi` targets the production gateway by default;
+pass `environment="dev"` to use the development gateway.
+
+---
 
 ## Documentation
 
@@ -253,20 +280,13 @@ Comprehensive documentation is available at [dtmapi.readthedocs.io](https://dtma
 
 ## Contributing
 
-We welcome contributions from the community! The source code for `dtmapi` is available on [GitHub](https://github.com/Displacement-tracking-Matrix/dtmapi).
-
-Feel free to:
-
-- Star the repository
-- Report bugs or issues
-- Suggest new features
-- Submit pull requests
+Contributions are welcome. The source code for `dtmapi` is available on [GitHub](https://github.com/Displacement-Tracking-Matrix/dtmapi); please report bugs, suggest features, or open pull requests there.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/Displacement-Tracking-Matrix/dtmapi/blob/main/LICENSE) file for details.
 
 ---
 

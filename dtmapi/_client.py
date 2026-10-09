@@ -21,6 +21,7 @@ configuration and any ``caplog`` assertions keep working.
 
 import logging
 import os
+import re
 import time
 from typing import Any, Dict, Optional, Union
 
@@ -97,11 +98,11 @@ class BaseDTMClient:
         # The key is never shown, so a logged or notebook-echoed client is safe.
         return f"{type(self).__name__}(subscription_key='***', timeout={self.timeout})"
 
-    def _headers(self) -> Dict[str, str]:
-        return {
-            "User-Agent": "Mozilla/5.0 (compatible; DTMClient/2.0)",
-            "Ocp-Apim-Subscription-Key": self.subscription_key,
-        }
+    def _headers(self, include_key: bool = True) -> Dict[str, str]:
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; DTMClient/2.0)"}
+        if include_key:
+            headers["Ocp-Apim-Subscription-Key"] = self.subscription_key
+        return headers
 
     def _get_endpoint(self, endpoint_type: str) -> str:
         """Map an endpoint name to a full URL. Implemented by each subclass."""
@@ -147,6 +148,11 @@ class BaseDTMClient:
 
         return False
 
+    @staticmethod
+    def _redact(text: str) -> str:
+        """Strip query strings from URLs in ``text`` (they may carry access tokens)."""
+        return re.sub(r"\?[^\s'\")]*", "?<redacted>", text)
+
     def _fetch_data(
         self,
         api_url: str,
@@ -154,6 +160,7 @@ class BaseDTMClient:
         to_pandas: bool = True,
         as_bytes: bool = False,
         unwrap: bool = True,
+        external: bool = False,
     ) -> Union[pd.DataFrame, Dict[str, Any], bytes]:
         """
         Fetch data from the specified API URL with given parameters.
@@ -165,14 +172,29 @@ class BaseDTMClient:
         :type params: Dict[str, Any]
         :param to_pandas: If True, the data will be returned as a pandas DataFrame. Otherwise, it will be returned as a JSON object.
         :type to_pandas: bool
-        :return: The data matching the specified criteria, either as a DataFrame or a JSON object.
-        :rtype: Union[pd.DataFrame, Dict[str, Any]]
+        :param as_bytes: If True, return the raw response body without JSON parsing (file downloads).
+        :type as_bytes: bool
+        :param unwrap: If False, return the parsed JSON as-is instead of passing it through :meth:`_unwrap`.
+        :type unwrap: bool
+        :param external: If True, the URL is on a host outside the DTM gateway (e.g. a
+            pre-signed blob link): the subscription key is not sent, a 401/403 is not
+            reported as a subscription-key failure, and the URL's query string — which
+            may carry an access token — is kept out of logs and error messages.
+        :type external: bool
+        :return: The data matching the specified criteria, as a DataFrame, a JSON object, or bytes when ``as_bytes`` is True.
+        :rtype: Union[pd.DataFrame, Dict[str, Any], bytes]
         :raises DTMApiTimeoutError: If the request times out.
         :raises DTMAuthenticationError: If authentication fails.
         :raises DTMApiResponseError: If the API returns an error response.
         :raises DTMApiRequestError: If the request fails for other reasons.
         """
-        self._logger.debug(f"Fetching data from {api_url} with params={params}")
+        shown_url = api_url.split("?", 1)[0] if external else api_url
+        clean = self._redact if external else str
+        # For external URLs the underlying requests error is not chained: its
+        # text (and the urllib3 error it wraps) repeats the signed URL, and a
+        # caller logging the traceback would record the token.
+        chain = (lambda e: None) if external else (lambda e: e)
+        self._logger.debug(f"Fetching data from {shown_url} with params={params}")
         last_exception = None
 
         for attempt in range(self.max_retries + 1):
@@ -186,15 +208,17 @@ class BaseDTMClient:
                     time.sleep(delay)
 
                 response = requests.get(
-                    api_url, params=params, headers=self._headers(), timeout=self.timeout
+                    api_url, params=params, headers=self._headers(include_key=not external), timeout=self.timeout
                 )
                 self._logger.debug(f"Received response: status={response.status_code}")
                 response.raise_for_status()
 
                 if as_bytes:
                     # File downloads: return the body untouched, no JSON parsing.
-                    self._logger.info(
-                        f"Successfully fetched {len(response.content)} bytes from {api_url}"
+                    # External downloads are logged by the caller, by file name.
+                    self._logger.log(
+                        logging.DEBUG if external else logging.INFO,
+                        f"Successfully fetched {len(response.content)} bytes from {shown_url}",
                     )
                     return response.content
 
@@ -202,25 +226,26 @@ class BaseDTMClient:
 
                 if not unwrap:
                     # Flat JSON responses (e.g. a download pointer) have no envelope.
-                    self._logger.info(f"Successfully fetched a JSON object from {api_url}")
+                    self._logger.info(f"Successfully fetched a JSON object from {shown_url}")
                     return data
 
                 result = self._unwrap(data)
                 result_count = len(result) if isinstance(result, list) else 1
-                self._logger.info(f"Successfully fetched {result_count} records from {api_url}")
+                self._logger.info(f"Successfully fetched {result_count} records from {shown_url}")
                 return pd.DataFrame(result) if to_pandas else result
 
             except requests.Timeout as e:
                 last_exception = e
-                self._logger.warning(f"Request timed out after {self.timeout} seconds: {api_url}")
+                self._logger.warning(f"Request timed out after {self.timeout} seconds: {shown_url}")
                 if not self._is_retryable_error(e) or attempt >= self.max_retries:
                     self._logger.error(f"Request timed out after {self.timeout} seconds (no more retries)")
                     raise self.TIMEOUT_ERROR(
                         f"Request timed out after {self.timeout} seconds"
-                    ) from e
+                    ) from chain(e)
             except requests.HTTPError as e:
                 last_exception = e
-                if e.response.status_code == 401 or e.response.status_code == 403:
+                # Only a request that carried the key can fail on the key.
+                if not external and e.response.status_code in (401, 403):
                     self._logger.error(f"Authentication failed: {e.response.status_code}")
                     raise self.AUTH_ERROR(
                         f"Authentication failed: {e.response.status_code} {e.response.reason}. "
@@ -230,18 +255,20 @@ class BaseDTMClient:
                 self._logger.warning(f"HTTP error: {e.response.status_code} {e.response.reason}")
                 if not self._is_retryable_error(e) or attempt >= self.max_retries:
                     self._logger.error(f"HTTP error occurred (no more retries): {e.response.status_code}")
-                    raise self.REQUEST_ERROR(
+                    err = self.REQUEST_ERROR(
                         f"HTTP error occurred: {e.response.status_code} {e.response.reason}"
-                    ) from e
+                    )
+                    err.status_code = e.response.status_code
+                    raise err from chain(e)
             except requests.RequestException as e:
                 last_exception = e
-                self._logger.warning(f"Request failed: {e}")
+                self._logger.warning(f"Request failed: {clean(str(e))}")
                 if not self._is_retryable_error(e) or attempt >= self.max_retries:
-                    self._logger.error(f"Request failed (no more retries): {e}")
-                    raise self.REQUEST_ERROR(f"API request failed: {e}") from e
+                    self._logger.error(f"Request failed (no more retries): {clean(str(e))}")
+                    raise self.REQUEST_ERROR(f"API request failed: {clean(str(e))}") from chain(e)
 
         # This should not be reached, but just in case
         if last_exception:
             raise self.REQUEST_ERROR(
                 f"API request failed after {self.max_retries} retries"
-            ) from last_exception
+            ) from chain(last_exception)
