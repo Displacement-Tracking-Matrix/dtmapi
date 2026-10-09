@@ -169,15 +169,10 @@ class TestHna(unittest.TestCase):
     def test_defaults(self):
         hna = DTMHnaApi(subscription_key=KEY)
         self.assertEqual(hna.api_version, "v1")
-        self.assertEqual(hna.environment, "prod")
 
     def test_bad_version(self):
         with self.assertRaises(HNAVersionError):
             DTMHnaApi(subscription_key=KEY, api_version="v3")
-
-    def test_bad_environment(self):
-        with self.assertRaises(HNAVersionError):
-            DTMHnaApi(subscription_key=KEY, environment="staging")
 
     def test_reads_its_own_env_var(self):
         with mock.patch.dict("os.environ", {"DTMHNA_SUBSCRIPTION_KEY": HNA_KEY}, clear=True):
@@ -211,13 +206,16 @@ class TestHna(unittest.TestCase):
         with self.assertRaises(DTMAuthenticationError):
             DTMHnaApi(subscription_key=KEY).get_all_countries()
 
-    def test_environments_use_different_hosts(self):
-        dev = DTMHnaApi(subscription_key=KEY, environment="dev")._get_endpoint("admin2")
-        self.assertIn("dtm-apim-dev.iom.int", dev)
-        self.assertTrue(dev.endswith("/HNA/v1/admin2"))
-        prod = DTMHnaApi(subscription_key=KEY)._get_endpoint("admin2")
-        self.assertIn("dtm-apim.iom.int", prod)
-        self.assertNotIn("dtm-apim-dev", prod)
+    def test_endpoint_urls(self):
+        expected = {
+            "countries": "https://dtmapi.iom.int/HNA/v1/country-list",
+            "catalog": "https://dtmapi.iom.int/HNA/v1/catalog",
+            "admin2": "https://dtmapi.iom.int/HNA/v1/admin2",
+            "download": "https://dtmapi.iom.int/HNA/v1/download",
+        }
+        hna = DTMHnaApi(subscription_key=KEY)
+        for endpoint, url in expected.items():
+            self.assertEqual(hna._get_endpoint(endpoint), url, endpoint)
 
     def test_surface_matches_the_four_hna_endpoints(self):
         hna = DTMHnaApi(subscription_key=HNA_KEY)
@@ -235,10 +233,10 @@ class TestHna(unittest.TestCase):
         get.return_value = fake_response(BARE_LIST)
         hna = DTMHnaApi(subscription_key=HNA_KEY)
         hna.get_all_countries()
-        self.assertIn("CountryList", get.call_args.args[0])
+        self.assertEqual(get.call_args.args[0], "https://dtmapi.iom.int/HNA/v1/country-list")
         self.assertIsNone(get.call_args.kwargs["params"])
         hna.get_hna_data_catalog()
-        self.assertIn("HNADataCatalog", get.call_args.args[0])
+        self.assertEqual(get.call_args.args[0], "https://dtmapi.iom.int/HNA/v1/catalog")
         self.assertIsNone(get.call_args.kwargs["params"])
 
     # --- admin2 required parameters ---

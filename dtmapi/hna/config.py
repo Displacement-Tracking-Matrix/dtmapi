@@ -1,26 +1,17 @@
 """
-Endpoint configuration for the HNA API.
+Endpoint URLs for the HNA API.
 
-The HNA endpoints sit behind a different gateway host from the displacement
-API, so the URLs are built here rather than derived from ``dtmapi/config.py``.
+Query parameters accepted by each endpoint::
 
-Verified against the API portal:
-    https://dtm-apim-dev.iom.int/HNA/v1/CountryList
+    country-list  (none)
+    catalog       (none)
+    admin2        Admin0Name, Admin0Pcode, PopulationGroup, Year, Page
+    download      Admin0Name, Admin0Pcode, PopulationGroup, Year
 """
 
-#: Gateway base URL per environment.
-HNA_BASE_URLS = {
-    "prod": "https://dtm-apim.iom.int/HNA/v1",
-    "dev": "https://dtm-apim-dev.iom.int/HNA/v1",
-}
-
-#: Path segment for each endpoint, appended to the environment's base URL.
-HNA_ENDPOINT_PATHS = {
-    "countries": "CountryList",
-    "catalog": "HNADataCatalog",
-    "admin2": "admin2",
-    "download": "download",
-}
+HNA_COUNTRY_LIST_API = "https://dtmapi.iom.int/HNA/v1/country-list"
+HNA_CATALOG_API = "https://dtmapi.iom.int/HNA/v1/catalog"
+HNA_ADMIN_2_API = "https://dtmapi.iom.int/HNA/v1/admin2"
+HNA_DOWNLOAD_API = "https://dtmapi.iom.int/HNA/v1/download"
 
 SUPPORTED_VERSIONS = ("v1",)
-SUPPORTED_ENVIRONMENTS = tuple(HNA_BASE_URLS)

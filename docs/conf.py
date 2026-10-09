@@ -31,7 +31,7 @@ extensions = [
 ]
 
 # Show both the class docstring and __init__'s, so constructor parameters
-# (api_version, environment, timeout, retries) appear in the reference.
+# (api_version, timeout, retries) appear in the reference.
 autoclass_content = "both"
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]

@@ -195,13 +195,11 @@ falls back to ``DTMAPI_SUBSCRIPTION_KEY``.
 
 .. code-block:: python
 
-    import os
     from dtmapi import DTMHnaApi
 
-    hna = DTMHnaApi(subscription_key=os.environ["DTMHNA_SUBSCRIPTION_KEY"])
+    hna = DTMHnaApi(subscription_key="YOUR-HNA-API-KEY-HERE")
 
-The client targets the production gateway by default. Pass ``environment="dev"`` to use the development
-gateway. The HNA API is versioned separately from the displacement API, so ``api_version`` defaults to ``"v1"``.
+The HNA API is versioned separately from the displacement API, so ``api_version`` defaults to ``"v1"``.
 ``timeout``, ``max_retries``, and ``retry_delay`` work as described in `Advanced Configuration`_.
 
 .. _hna-key:
@@ -342,7 +340,7 @@ Exception Types
         HNAResponseError,  # also a DTMApiResponseError
         HNARequestError,   # also a DTMApiRequestError
         HNATimeoutError,   # also a DTMApiTimeoutError
-        HNAVersionError,   # also a DTMApiVersionError (invalid version or environment)
+        HNAVersionError,   # also a DTMApiVersionError (invalid version)
     )
 
 Each HNA exception also subclasses its ``DTMApi`` counterpart and ``DTMApiError``, so a single
@@ -477,7 +475,6 @@ The following example combines several features:
 
 .. code-block:: python
 
-    import os
     import logging
     from dtmapi import DTMApi, DTMApiError, ValidationError
 
@@ -486,7 +483,7 @@ The following example combines several features:
 
     # Initialize API client with custom settings
     api = DTMApi(
-        subscription_key=os.environ["DTMAPI_SUBSCRIPTION_KEY"],
+        subscription_key="YOUR-API-KEY-HERE",
         api_version="v3",
         timeout=60,
         max_retries=5

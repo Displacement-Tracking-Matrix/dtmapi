@@ -8,9 +8,10 @@ import pandas as pd
 
 from dtmapi._client import BaseDTMClient
 from dtmapi.hna.config import (
-    HNA_BASE_URLS,
-    HNA_ENDPOINT_PATHS,
-    SUPPORTED_ENVIRONMENTS,
+    HNA_ADMIN_2_API,
+    HNA_CATALOG_API,
+    HNA_COUNTRY_LIST_API,
+    HNA_DOWNLOAD_API,
     SUPPORTED_VERSIONS,
 )
 from dtmapi.hna.exceptions import (
@@ -70,7 +71,6 @@ class DTMHnaApi(BaseDTMClient):
         self,
         subscription_key: Optional[str] = None,
         api_version: str = "v1",
-        environment: str = "prod",
         timeout: Optional[int] = None,
         max_retries: Optional[int] = None,
         retry_delay: Optional[float] = None,
@@ -84,16 +84,13 @@ class DTMHnaApi(BaseDTMClient):
         :type subscription_key: Optional[str]
         :param api_version: HNA API version to use (currently only "v1").
         :type api_version: str
-        :param environment: Gateway environment to target: "prod" (default)
-            or "dev" for testing against the development gateway.
-        :type environment: str
         :param timeout: Request timeout in seconds (default: 30).
         :type timeout: Optional[int]
         :param max_retries: Maximum number of retry attempts for failed requests (default: 3).
         :type max_retries: Optional[int]
         :param retry_delay: Base delay in seconds between retries (default: 1). Uses exponential backoff.
         :type retry_delay: Optional[float]
-        :raises HNAVersionError: If api_version or environment is not supported.
+        :raises HNAVersionError: If api_version is not supported.
         :raises HNAAuthError: If no subscription key is provided.
         """
         if api_version not in SUPPORTED_VERSIONS:
@@ -101,12 +98,6 @@ class DTMHnaApi(BaseDTMClient):
                 f"api_version must be one of {', '.join(SUPPORTED_VERSIONS)}, got: '{api_version}'"
             )
         self.api_version = api_version
-
-        if environment not in SUPPORTED_ENVIRONMENTS:
-            raise HNAVersionError(
-                f"environment must be one of {', '.join(SUPPORTED_ENVIRONMENTS)}, got: '{environment}'"
-            )
-        self.environment = environment
 
         super().__init__(
             subscription_key=subscription_key,
@@ -120,20 +111,25 @@ class DTMHnaApi(BaseDTMClient):
 
         self._logger.info(
             f"DTMHnaApi client initialized with api_version={self.api_version}, "
-            f"environment={self.environment}, timeout={self.timeout}s, "
-            f"max_retries={self.max_retries}, retry_delay={self.retry_delay}s"
+            f"timeout={self.timeout}s, max_retries={self.max_retries}, retry_delay={self.retry_delay}s"
         )
 
     def _get_endpoint(self, endpoint_type: str) -> str:
         """
-        Build the HNA endpoint URL for the configured environment.
+        Get the HNA endpoint URL.
 
         :param endpoint_type: One of "countries", "catalog", "admin2", "download".
         :type endpoint_type: str
         :return: The full API endpoint URL.
         :rtype: str
         """
-        return f"{HNA_BASE_URLS[self.environment]}/{HNA_ENDPOINT_PATHS[endpoint_type]}"
+        endpoint_map = {
+            "countries": HNA_COUNTRY_LIST_API,
+            "catalog": HNA_CATALOG_API,
+            "admin2": HNA_ADMIN_2_API,
+            "download": HNA_DOWNLOAD_API,
+        }
+        return endpoint_map[endpoint_type]
 
     def _unwrap(self, data: Any) -> Any:
         """

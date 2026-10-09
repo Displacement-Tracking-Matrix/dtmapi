@@ -101,12 +101,10 @@ pip install dtmapi
 A complete example to get you started. Each call returns a pandas DataFrame; `.head()` previews the first rows in a notebook.
 
 ```python
-import os
-
 from dtmapi import DTMApi
 
 # Initialize the API client with your subscription key
-api = DTMApi(subscription_key=os.environ["DTMAPI_SUBSCRIPTION_KEY"])
+api = DTMApi(subscription_key="YOUR-API-KEY-HERE")
 
 # Get all available countries
 all_countries = api.get_all_countries()
@@ -237,11 +235,9 @@ subscription key** (see [HNA subscription key](#hna-subscription-key)); the
 displacement key will not work for it.
 
 ```python
-import os
-
 from dtmapi import DTMHnaApi
 
-hna = DTMHnaApi(subscription_key=os.environ["DTMHNA_SUBSCRIPTION_KEY"])
+hna = DTMHnaApi(subscription_key="YOUR-HNA-API-KEY-HERE")
 
 # Countries with HNA data, and the indicator catalog (one row per column
 # returned by the Admin 2 endpoint, with its category and description)
@@ -267,8 +263,7 @@ print(info["downloadUrl"], info["fileName"], info["expiresAt"])
 
 `DTMHnaApi` shares `DTMApi`'s retry, timeout, and authentication behavior. The
 HNA API is versioned separately, so it defaults to `api_version="v1"` while
-`DTMApi` defaults to `"v3"`. `DTMHnaApi` targets the production gateway by default;
-pass `environment="dev"` to use the development gateway.
+`DTMApi` defaults to `"v3"`.
 
 ---
 
